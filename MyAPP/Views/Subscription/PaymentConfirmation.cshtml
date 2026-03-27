@@ -1,0 +1,70 @@
+@model PaymentConfirmationViewModel
+@{
+    ViewData["Title"] = "Payment Successful";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm text-center">
+            <div class="card-body p-5">
+                <div class="mb-4">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-check-lg fs-1"></i>
+                    </div>
+                </div>
+
+                <h2 class="text-success mb-3">Payment Successful!</h2>
+                <p class="text-muted mb-4">Your UPI payment has been processed successfully.</p>
+
+                <div class="bg-light p-4 rounded mb-4">
+                    <div class="row text-start">
+                        <div class="col-6 mb-3">
+                            <small class="text-muted">Transaction ID</small>
+                            <div class="fw-bold"><code>@Model.TransactionId</code></div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <small class="text-muted">Amount Paid</small>
+                            <div class="fw-bold text-success">?@Model.Amount</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <small class="text-muted">Plan</small>
+                            <div class="fw-bold">@Model.PlanName</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <small class="text-muted">Payment Method</small>
+                            <div class="fw-bold">
+                                <i class="bi bi-phone me-1"></i>@Model.PaymentMethod
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <small class="text-muted">Your UPI ID</small>
+                            <div class="fw-bold">@Model.UpiId</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <small class="text-muted">Payment Date</small>
+                            <div class="fw-bold">@Model.PaymentDate.ToString("dd MMM yyyy, HH:mm")</div>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted">Subscription Valid Until</small>
+                            <div class="fw-bold text-primary fs-5">@Model.ExpiryDate.ToString("dd MMM yyyy")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success mb-4">
+                    <i class="bi bi-star-fill me-2"></i>
+                    You now have full access to all premium train updates and timetables!
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                        <i class="bi bi-house me-2"></i>Browse Updates
+                    </a>
+                    <a asp-action="History" class="btn btn-outline-secondary">
+                        <i class="bi bi-receipt me-2"></i>Payment History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

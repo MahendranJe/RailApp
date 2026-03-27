@@ -1,0 +1,146 @@
+@model TrainUpdateDetailsViewModel
+@{
+    ViewData["Title"] = Model.TrainUpdate.Title;
+    var scheduleDisplayText = ViewBag.ScheduleDisplayText as string;
+    var scheduleBadgeClass = ViewBag.ScheduleBadgeClass as string;
+    var scheduleBadgeText = ViewBag.ScheduleBadgeText as string;
+    var nextRunDate = ViewBag.NextRunDate as string;
+    var isRunningToday = ViewBag.IsRunningToday as bool? ?? false;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Back Button -->
+        <a asp-action="Index" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left me-2"></i>Back to Updates
+        </a>
+
+        <div class="card">
+            <!-- Header -->
+            <div class="card-header bg-transparent">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <span class="badge bg-primary fs-6 me-2">@Model.TrainUpdate.TrainNumber</span>
+                        @if (!string.IsNullOrEmpty(scheduleBadgeClass))
+                        {
+                            <span class="badge @scheduleBadgeClass">@scheduleBadgeText</span>
+                        }
+                        @if (isRunningToday)
+                        {
+                            <span class="badge bg-success ms-1">
+                                <i class="bi bi-lightning-fill me-1"></i>Running Today
+                            </span>
+                        }
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>@Model.TrainUpdate.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                    </small>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <h3 class="card-title mb-3">@Model.TrainUpdate.Title</h3>
+
+                <!-- Schedule Info -->
+                @if (!string.IsNullOrEmpty(scheduleDisplayText))
+                {
+                    <div class="alert alert-info py-2 mb-3">
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <div>
+                                <i class="bi bi-calendar-week me-2"></i>
+                                <strong>Schedule:</strong> @scheduleDisplayText
+                            </div>
+                            @if (!string.IsNullOrEmpty(nextRunDate))
+                            {
+                                <div class="ms-auto">
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-calendar-check me-1"></i>Next Run: @nextRunDate
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Route Info -->
+                <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                    <div class="text-center flex-fill">
+                        <div class="small text-muted">From</div>
+                        <div class="fw-bold text-primary">
+                            <i class="bi bi-geo-alt me-1"></i>@Model.TrainUpdate.FromStation
+                        </div>
+                    </div>
+                    <div class="mx-3">
+                        <i class="bi bi-arrow-right fs-4 text-muted"></i>
+                    </div>
+                    <div class="text-center flex-fill">
+                        <div class="small text-muted">To</div>
+                        <div class="fw-bold text-success">
+                            <i class="bi bi-geo-alt-fill me-1"></i>@Model.TrainUpdate.ToStation
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.CanViewFullDetails)
+                {
+                    <!-- Full Description -->
+                    <div class="mb-4">
+                        <h5><i class="bi bi-info-circle me-2"></i>Details</h5>
+                        <p class="text-muted" style="white-space: pre-line;">@Model.TrainUpdate.Description</p>
+                    </div>
+
+                    <!-- Timetable Image -->
+                    @if (!string.IsNullOrEmpty(Model.TrainUpdate.ImagePath))
+                    {
+                        <div class="mb-4">
+                            <h5><i class="bi bi-image me-2"></i>Timetable</h5>
+                            <div class="text-center">
+                                <img src="@Model.TrainUpdate.ImagePath" alt="Timetable" class="img-fluid rounded shadow" style="max-height: 600px;">
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <!-- Login Required Lock -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="bi bi-lock-fill display-1 text-primary"></i>
+                        </div>
+                        <h4>Login Required</h4>
+                        <p class="text-muted mb-4">
+                            Login to view full details including descriptions and timetable images.<br>
+                            It's completely <strong>FREE</strong>!
+                        </p>
+
+                        <div class="d-flex justify-content-center gap-3">
+                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            </a>
+                            <a asp-controller="Auth" asp-action="SendOTP" class="btn btn-outline-primary">
+                                <i class="bi bi-person-plus me-2"></i>Register
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        @if (Model.TrainUpdate.UpdatedAt.HasValue)
+                        {
+                            <span>Last updated: @Model.TrainUpdate.UpdatedAt.Value.ToString("MMM dd, yyyy HH:mm")</span>
+                        }
+                    </small>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Alerts" asp-action="Create" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-bell me-2"></i>Create Alert for this Train
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

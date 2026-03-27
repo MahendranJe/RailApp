@@ -1,0 +1,354 @@
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Train Updates Feed";
+    var scheduleInfo = ViewBag.ScheduleInfo as Dictionary<int, (string DisplayText, string BadgeClass, string BadgeText, string? NextRun, bool IsRunningToday)>
+        ?? new Dictionary<int, (string DisplayText, string BadgeClass, string BadgeText, string? NextRun, bool IsRunningToday)>();
+}
+
+<!-- Tatkal Timer Section -->
+<div class="row mb-4 g-3">
+    <div class="col-lg-6">
+        <div class="tatkal-timer">
+            <h5 class="mb-2"><i class="bi bi-stopwatch me-2"></i>Tatkal Booking Timer</h5>
+            <div class="row">
+                <div class="col-6">
+                    <div class="small opacity-75">AC Classes (10:00 AM)</div>
+                    <div id="acTimer" class="fs-5 fs-md-4 fw-bold">--:--:--</div>
+                </div>
+                <div class="col-6">
+                    <div class="small opacity-75">Non-AC Classes (11:00 AM)</div>
+                    <div id="nonAcTimer" class="fs-5 fs-md-4 fw-bold">--:--:--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle me-2 text-primary"></i>Quick Stats</h5>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="fs-4 fw-bold text-primary">@Model.TotalCount</div>
+                        <div class="small text-muted">Total</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-4 fw-bold text-success">@Model.TrainUpdates.Count(t => t.TravelDate.Date == DateTime.Today)</div>
+                        <div class="small text-muted">Today</div>
+                    </div>
+                    <div class="col-4">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="fs-4 fw-bold text-success"><i class="bi bi-check-circle-fill"></i></div>
+                            <div class="small text-muted">Full Access</div>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-success btn-sm">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form asp-action="Index" method="get">
+            <div class="row g-2 g-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label small fw-semibold">Search</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Train no, title..." value="@Model.SearchTerm">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label small fw-semibold">Date</label>
+                    <input type="date" name="date" class="form-control form-control-sm" value="@Model.FilterDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label small fw-semibold">From</label>
+                    <input type="text" name="from" class="form-control form-control-sm" placeholder="From..." value="@Model.FilterFromStation">
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label small fw-semibold">To</label>
+                    <input type="text" name="to" class="form-control form-control-sm" placeholder="To..." value="@Model.FilterToStation">
+                </div>
+                <div class="col-6 col-md-3 col-lg-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-fill">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Train Updates Feed -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h4 class="mb-0"><i class="bi bi-newspaper me-2"></i>Latest Train Updates</h4>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Alerts" asp-action="Create" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-bell-fill me-1"></i>Create Alert
+                </a>
+            }
+        </div>
+
+        @if (Model.TrainUpdates.Any())
+        {
+            @foreach (var update in Model.TrainUpdates)
+            {
+                var hasInfo = scheduleInfo.TryGetValue(update.Id, out var info);
+                <div class="card train-card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-1">
+                            <div>
+                                <span class="badge bg-primary me-1">@update.TrainNumber</span>
+                                @if (hasInfo)
+                                {
+                                    <span class="badge @info.BadgeClass">@info.BadgeText</span>
+                                    @if (info.IsRunningToday)
+                                    {
+                                        <span class="badge bg-success ms-1">
+                                            <i class="bi bi-lightning-fill me-1"></i>Today
+                                        </span>
+                                    }
+                                }
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>@update.CreatedAt.ToString("MMM dd, HH:mm")
+                            </small>
+                        </div>
+                        <h5 class="card-title mb-2 text-truncate">@update.Title</h5>
+                        
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <p class="card-text text-muted small">
+                                @(update.Description.Length > 120 ? update.Description.Substring(0, 120) + "..." : update.Description)
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="card-text text-muted small">
+                                <i class="bi bi-lock me-1"></i>
+                                Login to view full details of this update.
+                            </p>
+                        }
+                        
+                        <!-- Schedule Info -->
+                        @if (hasInfo)
+                        {
+                            <div class="mb-2 small">
+                                <i class="bi bi-calendar-week text-info me-1"></i>
+                                <span class="text-muted">@info.DisplayText</span>
+                                @if (!string.IsNullOrEmpty(info.NextRun))
+                                {
+                                    <span class="ms-2 text-success">
+                                        <i class="bi bi-arrow-right me-1"></i>Next: @info.NextRun
+                                    </span>
+                                }
+                            </div>
+                        }
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                            <div class="small">
+                                <span class="text-primary fw-semibold">
+                                    <i class="bi bi-geo-alt me-1"></i>@update.FromStation
+                                </span>
+                                <i class="bi bi-arrow-right mx-1"></i>
+                                <span class="text-success fw-semibold">
+                                    <i class="bi bi-geo-alt-fill me-1"></i>@update.ToStation
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <a asp-action="Details" asp-route-id="@update.Id" class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Home", new { id = update.Id })" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i>Login to View
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination pagination-sm justify-content-center flex-wrap">
+                        @if (Model.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" 
+                                   asp-route-search="@Model.SearchTerm" asp-route-date="@Model.FilterDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-from="@Model.FilterFromStation" asp-route-to="@Model.FilterToStation">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        }
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@i"
+                                   asp-route-search="@Model.SearchTerm" asp-route-date="@Model.FilterDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-from="@Model.FilterFromStation" asp-route-to="@Model.FilterToStation">@i</a>
+                            </li>
+                        }
+                        @if (Model.CurrentPage < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)"
+                                   asp-route-search="@Model.SearchTerm" asp-route-date="@Model.FilterDate?.ToString("yyyy-MM-dd")"
+                                   asp-route-from="@Model.FilterFromStation" asp-route-to="@Model.FilterToStation">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">No train updates found</h5>
+                    <p class="text-muted">Try adjusting your search filters.</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4 mt-4 mt-lg-0">
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <!-- Login Prompt -->
+            <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white text-center">
+                    <h5><i class="bi bi-unlock me-2"></i>Free Access</h5>
+                    <p class="small mb-3">Login to view full train update details and timetable images!</p>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-sm">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Get Started - It's Free!
+                    </a>
+                </div>
+            </div>
+        }
+
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0"><i class="bi bi-lightning-fill me-2 text-warning"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Alerts" asp-action="Create" class="btn btn-outline-primary w-100 mb-2 btn-sm">
+                        <i class="bi bi-bell-fill me-2"></i>Create Alert
+                    </a>
+                    <a asp-controller="Alerts" asp-action="Index" class="btn btn-outline-secondary w-100 btn-sm">
+                        <i class="bi bi-list-check me-2"></i>My Alerts
+                    </a>
+                }
+                else
+                {
+                    <p class="text-muted small mb-2">Login to access all features.</p>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary w-100 mb-2 btn-sm">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary w-100 btn-sm">
+                        <i class="bi bi-person-plus me-2"></i>Register
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0"><i class="bi bi-gem me-2 text-info"></i>Features</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Full timetable images</li>
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Detailed route info</li>
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Schedule information</li>
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Custom alerts</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i>All features FREE!</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Follow Us -->
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0"><i class="bi bi-share me-2 text-primary"></i>Follow Us</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">Stay updated with latest railway news!</p>
+                <a href="https://whatsapp.com/channel/0029Va6gl6EFcow4AOH5UC3i" target="_blank" class="btn btn-success w-100 mb-2 btn-sm">
+                    <i class="bi bi-whatsapp me-2"></i>Join WhatsApp Channel
+                </a>
+                <a href="https://www.instagram.com/southzone_railwayupdate" target="_blank" class="btn btn-outline-danger w-100 btn-sm">
+                    <i class="bi bi-instagram me-2"></i>Follow on Instagram
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateTatkalTimers() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            let acTarget = new Date(today);
+            acTarget.setHours(10, 0, 0, 0);
+            if (now > acTarget) {
+                acTarget.setDate(acTarget.getDate() + 1);
+            }
+            
+            let nonAcTarget = new Date(today);
+            nonAcTarget.setHours(11, 0, 0, 0);
+            if (now > nonAcTarget) {
+                nonAcTarget.setDate(nonAcTarget.getDate() + 1);
+            }
+            
+            document.getElementById('acTimer').textContent = formatCountdown(acTarget - now);
+            document.getElementById('nonAcTimer').textContent = formatCountdown(nonAcTarget - now);
+        }
+        
+        function formatCountdown(ms) {
+            if (ms <= 0) return "OPEN!";
+            
+            const hours = Math.floor(ms / (1000 * 60 * 60));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        updateTatkalTimers();
+        setInterval(updateTatkalTimers, 1000);
+    </script>
+}

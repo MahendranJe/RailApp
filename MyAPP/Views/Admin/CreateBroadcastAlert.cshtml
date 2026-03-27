@@ -1,0 +1,134 @@
+@model AlertViewModel
+@{
+    ViewData["Title"] = "Create Broadcast Alert";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="bi bi-megaphone me-2"></i>Create Broadcast Alert</h2>
+                <p class="text-muted mb-0">This alert will be sent to ALL users</p>
+            </div>
+            <a asp-action="Alerts" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Alerts
+            </a>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Broadcast Alert:</strong> When you create this alert, ALL active users will receive a notification immediately.
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-bell-fill me-2"></i>Alert Details</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateBroadcastAlert" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TrainNumber" class="form-label">Train Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-train-front"></i></span>
+                                <input asp-for="TrainNumber" class="form-control" placeholder="e.g., 12345" />
+                            </div>
+                            <span asp-validation-for="TrainNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TravelDate" class="form-label">Travel Date <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                                <input asp-for="TravelDate" type="date" class="form-control" />
+                            </div>
+                            <span asp-validation-for="TravelDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FromStation" class="form-label">From Station</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <input asp-for="FromStation" class="form-control" placeholder="e.g., Mumbai" />
+                            </div>
+                            <span asp-validation-for="FromStation" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ToStation" class="form-label">To Station</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+                                <input asp-for="ToStation" class="form-control" placeholder="e.g., Delhi" />
+                            </div>
+                            <span asp-validation-for="ToStation" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Message" class="form-label">Message to Users</label>
+                        <textarea asp-for="Message" class="form-control" rows="4" 
+                                  placeholder="Enter a custom message for users (e.g., 'Tickets available now! Book immediately.')"></textarea>
+                        <span asp-validation-for="Message" class="text-danger small"></span>
+                        <small class="text-muted">If left empty, a default message will be generated.</small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="bi bi-megaphone me-2"></i>Send Broadcast Alert
+                        </button>
+                        <a asp-action="Alerts" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="card mt-4">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0"><i class="bi bi-eye me-2"></i>Notification Preview</h6>
+            </div>
+            <div class="card-body">
+                <div class="border rounded p-3 bg-light">
+                    <div class="d-flex align-items-start">
+                        <div class="bg-primary text-white rounded-circle p-2 me-3">
+                            <i class="bi bi-bell-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">?? Train Alert: <span id="previewTrainNumber">12345</span></h6>
+                            <p class="text-muted mb-0 small" id="previewMessage">
+                                Important update for train on <span id="previewDate">01 Jan 2025</span>. Check details now!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Live preview
+        document.getElementById('TrainNumber').addEventListener('input', function() {
+            document.getElementById('previewTrainNumber').textContent = this.value || '12345';
+        });
+        
+        document.getElementById('TravelDate').addEventListener('change', function() {
+            if (this.value) {
+                var date = new Date(this.value);
+                var options = { day: '2-digit', month: 'short', year: 'numeric' };
+                document.getElementById('previewDate').textContent = date.toLocaleDateString('en-GB', options);
+            }
+        });
+        
+        document.getElementById('Message').addEventListener('input', function() {
+            var message = this.value || 'Important update for train. Check details now!';
+            document.getElementById('previewMessage').textContent = message;
+        });
+    </script>
+}

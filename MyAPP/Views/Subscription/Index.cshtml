@@ -1,0 +1,175 @@
+@model SubscriptionViewModel
+@{
+    ViewData["Title"] = "Subscription Plans";
+    var plans = ViewBag.Plans as List<SubscriptionPlanViewModel>;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <h2 class="mb-4 text-center"><i class="bi bi-star-fill me-2 text-warning"></i>Subscription Plans</h2>
+
+        <!-- Current Plan Status -->
+        @if (Model.CurrentPlan != "Free")
+        {
+            <div class="alert alert-success d-flex align-items-center mb-4">
+                <i class="bi bi-star-fill me-3 fs-4"></i>
+                <div class="flex-grow-1">
+                    <strong>Current Plan:</strong> @Model.CurrentPlan
+                    @if (Model.ExpiryDate.HasValue)
+                    {
+                        if (Model.IsExpired)
+                        {
+                            <span class="text-danger ms-2">• Expired on @Model.ExpiryDate.Value.ToString("dd MMM yyyy")</span>
+                        }
+                        else
+                        {
+                            <span class="ms-2">• Valid until @Model.ExpiryDate.Value.ToString("dd MMM yyyy") (@Model.DaysRemaining days remaining)</span>
+                        }
+                    }
+                </div>
+                <form asp-action="CancelSubscription" method="post" class="ms-3">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to cancel your subscription?');">
+                        Cancel Subscription
+                    </button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info d-flex align-items-center mb-4">
+                <i class="bi bi-info-circle me-3 fs-4"></i>
+                <div>
+                    <strong>Current Plan:</strong> Free
+                    <span class="ms-2">• Upgrade to access premium train updates and timetables</span>
+                </div>
+            </div>
+        }
+
+        <div class="row g-4 justify-content-center">
+            @if (plans != null)
+            {
+                @foreach (var plan in plans)
+                {
+                    var isCurrentPlan = plan.PlanName == Model.CurrentPlan;
+                    var cardClass = plan.IsPopular ? "border-primary border-2" : "";
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100 @cardClass @(isCurrentPlan ? "bg-light" : "")">
+                            @if (plan.IsPopular)
+                            {
+                                <div class="card-header bg-primary text-white text-center py-2">
+                                    <span class="fw-bold"><i class="bi bi-fire me-1"></i>MOST POPULAR</span>
+                                </div>
+                            }
+                            @if (isCurrentPlan && plan.PlanName != "Free")
+                            {
+                                <div class="card-header bg-success text-white text-center py-2">
+                                    <span class="fw-bold"><i class="bi bi-check-circle me-1"></i>CURRENT PLAN</span>
+                                </div>
+                            }
+                            <div class="card-body text-center p-4">
+                                <h3 class="@(plan.PlanName == "Premium" ? "text-warning" : plan.PlanName == "Monthly" ? "text-primary" : "text-secondary") mb-0">
+                                    @plan.PlanName
+                                </h3>
+                                <div class="display-4 fw-bold my-3">
+                                    @if (plan.Price > 0)
+                                    {
+                                        <span>?@plan.Price</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Free</span>
+                                    }
+                                </div>
+                                <p class="text-muted">@plan.Description</p>
+                                <hr>
+                                <ul class="list-unstyled text-start">
+                                    @foreach (var feature in plan.Features)
+                                    {
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            @feature
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                            <div class="card-footer bg-transparent text-center p-3">
+                                @if (isCurrentPlan)
+                                {
+                                    <button class="btn btn-secondary w-100" disabled>
+                                        <i class="bi bi-check-lg me-2"></i>Current Plan
+                                    </button>
+                                }
+                                else if (plan.PlanName == "Free")
+                                {
+                                    <span class="text-muted">Base plan</span>
+                                }
+                                else
+                                {
+                                    <a asp-action="Subscribe" asp-route-plan="@plan.PlanName" class="btn @(plan.IsPopular ? "btn-primary" : "btn-outline-primary") w-100">
+                                        <i class="bi bi-star-fill me-2"></i>Subscribe Now
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Payment History Link -->
+        <div class="text-center mt-4">
+            <a asp-action="History" class="btn btn-outline-secondary">
+                <i class="bi bi-receipt me-2"></i>View Payment History
+            </a>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="card mt-5">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Frequently Asked Questions</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                What content is premium?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Premium content includes detailed timetable images, complete route information, platform details, and exclusive updates that are not available to free users.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Can I cancel anytime?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, you can cancel your subscription anytime. You'll continue to have access until the end of your current billing period.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                What payment methods are accepted?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We accept all major credit and debit cards. Your payment information is securely processed.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

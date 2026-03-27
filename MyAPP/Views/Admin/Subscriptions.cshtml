@@ -1,0 +1,97 @@
+@model List<MyAPP.Models.Subscription>
+@{
+    ViewData["Title"] = "Manage Subscriptions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2><i class="bi bi-star me-2"></i>All Subscriptions</h2>
+        <p class="text-muted mb-0">View all user subscriptions (@Model.Count total)</p>
+    </div>
+    <a asp-action="Dashboard" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                        <tr>
+                            <th>User</th>
+                            <th>Plan</th>
+                            <th>Price</th>
+                            <th>Start Date</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var subscription in Model)
+                        {
+                            var isExpired = subscription.ExpiryDate.HasValue && subscription.ExpiryDate.Value < DateTime.UtcNow;
+                            <tr class="@(isExpired ? "table-secondary" : "")">
+                                <td>
+                                    <div class="fw-semibold text-truncate" style="max-width: 120px;">@subscription.User?.FullName</div>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 150px;">@subscription.User?.Email</small>
+                                </td>
+                                <td>
+                                    <span class="badge @(subscription.PlanName == "Premium" ? "bg-warning text-dark" : subscription.PlanName == "Monthly" ? "bg-info" : "bg-secondary") fs-6">
+                                        @subscription.PlanName
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (subscription.Price > 0)
+                                    {
+                                        <span class="fw-bold">?@subscription.Price</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Free</span>
+                                    }
+                                </td>
+                                <td class="text-nowrap">@subscription.StartDate.ToString("dd MMM yyyy")</td>
+                                <td class="text-nowrap">
+                                    @if (subscription.ExpiryDate.HasValue)
+                                    {
+                                        <span class="@(isExpired ? "text-danger" : "")">
+                                            @subscription.ExpiryDate.Value.ToString("dd MMM yyyy")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Never</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (subscription.IsActive && !isExpired)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else if (isExpired)
+                                    {
+                                        <span class="badge bg-danger">Expired</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-star fs-1 text-muted"></i>
+                <p class="text-muted mt-2">No subscriptions yet</p>
+            </div>
+        }
+    </div>
+</div>

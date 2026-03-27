@@ -1,0 +1,211 @@
+@model List<MyAPP.Models.Payment>
+@{
+    ViewData["Title"] = "Manage Payments";
+    var pendingCount = Model.Count(p => p.Status == "Pending");
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2><i class="bi bi-credit-card me-2"></i>UPI Payments</h2>
+        <p class="text-muted mb-0">
+            @Model.Count total
+            @if (pendingCount > 0)
+            {
+                <span class="badge bg-danger ms-2">@pendingCount pending!</span>
+            }
+        </p>
+    </div>
+    <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-2"></i>Dashboard
+    </a>
+</div>
+
+<!-- Pending Payments Alert -->
+@if (pendingCount > 0)
+{
+    <div class="alert alert-danger mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+                <strong>@pendingCount payment(s) need verification!</strong>
+                <div class="small">Check your UPI app, match the UTR number, then approve or reject.</div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Summary Cards -->
+<div class="row mb-4 g-3">
+    <div class="col-6 col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body py-2 text-center">
+                <div class="small">Revenue</div>
+                <div class="fs-5 fw-bold">?@Model.Where(p => p.Status == "Completed").Sum(p => p.Amount)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body py-2 text-center">
+                <div class="small">Pending</div>
+                <div class="fs-5 fw-bold">@pendingCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-2 text-center">
+                <div class="small">Completed</div>
+                <div class="fs-5 fw-bold">@Model.Count(p => p.Status == "Completed")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body py-2 text-center">
+                <div class="small">Rejected</div>
+                <div class="fs-5 fw-bold">@Model.Count(p => p.Status == "Failed")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payments List -->
+@if (Model.Any())
+{
+    @foreach (var payment in Model.OrderByDescending(p => p.Status == "Pending").ThenByDescending(p => p.PaymentDate))
+    {
+        var cardClass = payment.Status == "Pending" ? "border-warning border-2" : 
+                        payment.Status == "Completed" ? "border-success" : "border-secondary";
+        <div class="card mb-3 @cardClass">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-start gap-3">
+                            <!-- Status Icon -->
+                            <div class="text-center">
+                                @if (payment.Status == "Pending")
+                                {
+                                    <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                                        <i class="bi bi-hourglass-split fs-4"></i>
+                                    </div>
+                                    <small class="text-warning fw-bold">PENDING</small>
+                                }
+                                else if (payment.Status == "Completed")
+                                {
+                                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                                        <i class="bi bi-check-lg fs-4"></i>
+                                    </div>
+                                    <small class="text-success fw-bold">APPROVED</small>
+                                }
+                                else
+                                {
+                                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                                        <i class="bi bi-x-lg fs-4"></i>
+                                    </div>
+                                    <small class="text-danger fw-bold">REJECTED</small>
+                                }
+                            </div>
+                            
+                            <!-- Payment Details -->
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="mb-1">@payment.User?.FullName</h5>
+                                        <small class="text-muted">@payment.User?.Email</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fs-4 fw-bold text-success">?@payment.Amount</div>
+                                        <span class="badge bg-info">@payment.PlanName Plan</span>
+                                    </div>
+                                </div>
+                                
+                                <hr class="my-2">
+                                
+                                <div class="row small">
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="text-muted">Payment App</div>
+                                        <div class="fw-bold"><i class="bi bi-phone me-1"></i>@payment.PaymentMethod</div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="text-muted">Payer UPI</div>
+                                        <div class="fw-bold text-primary">@(payment.PayerUpiId ?? "-")</div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="text-muted">UTR / Ref No</div>
+                                        <div class="fw-bold text-danger">@(payment.UtrNumber ?? "Not provided")</div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <div class="text-muted">Date</div>
+                                        <div class="fw-bold">@payment.PaymentDate.ToString("dd MMM, HH:mm")</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="small text-muted">
+                                    Transaction ID: <code>@payment.TransactionId</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="col-md-4 text-end mt-3 mt-md-0">
+                        @if (payment.Status == "Pending")
+                        {
+                            <div class="alert alert-warning py-2 mb-2 small text-start">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Verify:</strong> Check your UPI app for ?@payment.Amount from <strong>@(payment.PayerUpiId ?? "unknown")</strong>
+                                @if (!string.IsNullOrEmpty(payment.UtrNumber))
+                                {
+                                    <br/><span>UTR: <strong class="text-danger">@payment.UtrNumber</strong></span>
+                                }
+                            </div>
+                            
+                            <form asp-action="ApprovePayment" asp-route-id="@payment.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success" 
+                                        onclick="return confirm('Confirm you received ?@payment.Amount from @payment.PayerUpiId?');">
+                                    <i class="bi bi-check-circle me-1"></i>Approve
+                                </button>
+                            </form>
+                            <form asp-action="RejectPayment" asp-route-id="@payment.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger"
+                                        onclick="return confirm('Reject this payment? User will be notified.');">
+                                    <i class="bi bi-x-circle me-1"></i>Reject
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No action needed</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <p class="text-muted mt-2">No payments yet</p>
+        </div>
+    </div>
+}
+
+<!-- How to Verify -->
+<div class="card mt-4 bg-light">
+    <div class="card-body">
+        <h6><i class="bi bi-question-circle me-2"></i>How to Verify Payments:</h6>
+        <ol class="small mb-0">
+            <li>Open your <strong>GPay/PhonePe/Paytm</strong> app linked to <code>mahendran182000-1@okicici</code></li>
+            <li>Go to <strong>Transaction History</strong></li>
+            <li>Find the payment matching the <strong>Amount</strong> and <strong>UTR Number</strong></li>
+            <li>If found ? Click <span class="badge bg-success">Approve</span></li>
+            <li>If not found ? Click <span class="badge bg-danger">Reject</span></li>
+        </ol>
+    </div>
+</div>

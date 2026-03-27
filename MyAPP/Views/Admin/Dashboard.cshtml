@@ -1,0 +1,306 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var pendingPayments = ViewBag.PendingPayments as int? ?? 0;
+    var pendingAlerts = ViewBag.PendingAlerts as int? ?? 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h2>
+        <p class="text-muted mb-0">Welcome back, Administrator</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="CreateBroadcastAlert" class="btn btn-warning">
+            <i class="bi bi-megaphone me-2"></i>Broadcast Alert
+        </a>
+        <a asp-action="CreateTrainUpdate" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Add Train Update
+        </a>
+    </div>
+</div>
+
+<!-- Pending Alerts -->
+@if (pendingPayments > 0 || pendingAlerts > 0)
+{
+    <div class="row mb-4">
+        @if (pendingPayments > 0)
+        {
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="alert alert-warning d-flex align-items-center mb-0">
+                    <i class="bi bi-credit-card-fill me-3 fs-4"></i>
+                    <div class="flex-grow-1">
+                        <strong>@pendingPayments payment(s) awaiting verification!</strong>
+                        <div class="small">Users are waiting for their subscription activation.</div>
+                    </div>
+                    <a asp-action="Payments" class="btn btn-warning btn-sm">
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        }
+        @if (pendingAlerts > 0)
+        {
+            <div class="col-md-6">
+                <div class="alert alert-info d-flex align-items-center mb-0">
+                    <i class="bi bi-bell-fill me-3 fs-4"></i>
+                    <div class="flex-grow-1">
+                        <strong>@pendingAlerts alert(s) pending action!</strong>
+                        <div class="small">Users are waiting for ticket availability updates.</div>
+                    </div>
+                    <a asp-action="Alerts" class="btn btn-info btn-sm">
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 small">Total Updates</h6>
+                        <h3 class="mb-0">@Model.TotalTrainUpdates</h3>
+                    </div>
+                    <i class="bi bi-newspaper fs-2 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 small">Total Users</h6>
+                        <h3 class="mb-0">@Model.TotalUsers</h3>
+                    </div>
+                    <i class="bi bi-people fs-2 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="opacity-75 small">Active Alerts</h6>
+                        <h3 class="mb-0">@Model.TotalAlerts</h3>
+                    </div>
+                    <i class="bi bi-bell-fill fs-2 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 small">Total Revenue</h6>
+                        <h3 class="mb-0">?@Model.TotalRevenue.ToString("N0")</h3>
+                    </div>
+                    <i class="bi bi-currency-rupee fs-2 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-action="TrainUpdates" class="btn btn-outline-primary">
+                        <i class="bi bi-list me-2"></i>Manage Train Updates
+                    </a>
+                    <a asp-action="Users" class="btn btn-outline-success">
+                        <i class="bi bi-people me-2"></i>Manage Users
+                    </a>
+                    <a asp-action="Alerts" class="btn btn-outline-warning">
+                        <i class="bi bi-bell me-2"></i>Manage Alerts
+                    </a>
+                    <a asp-action="Payments" class="btn btn-outline-info">
+                        <i class="bi bi-credit-card me-2"></i>Manage Payments
+                    </a>
+                    <a asp-action="Subscriptions" class="btn btn-outline-secondary">
+                        <i class="bi bi-star me-2"></i>View Subscriptions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Train Updates -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-newspaper me-2"></i>Recent Updates</h5>
+                <a asp-action="TrainUpdates" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RecentTrainUpdates.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var update in Model.RecentTrainUpdates)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge bg-primary me-2">@update.TrainNumber</span>
+                                        <span class="fw-semibold">@update.Title</span>
+                                    </div>
+                                    <small class="text-muted">@update.CreatedAt.ToString("dd MMM")</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">No train updates yet.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-bell me-2"></i>Recent Alerts</h5>
+                <a asp-action="Alerts" class="btn btn-sm btn-outline-warning">View All</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RecentAlerts.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var alert in Model.RecentAlerts)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge bg-warning text-dark me-2">@alert.TrainNumber</span>
+                                        <span class="small">@(alert.User?.FullName ?? "Unknown")</span>
+                                        <span class="text-muted mx-1">•</span>
+                                        <span class="small text-muted">@alert.TravelDate.ToString("dd MMM")</span>
+                                    </div>
+                                    @if (alert.IsAvailable)
+                                    {
+                                        <span class="badge bg-success">Available</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Pending</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">No alerts yet.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Users -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Recent Users</h5>
+                <a asp-action="Users" class="btn btn-sm btn-outline-success">View All</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RecentUsers.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var user in Model.RecentUsers)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                            @user.FullName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">@user.FullName</div>
+                                            <small class="text-muted">@user.Email</small>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">@user.CreatedAt.ToString("dd MMM")</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">No users yet.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Recent Payments</h5>
+                <a asp-action="Payments" class="btn btn-sm btn-outline-info">View All</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RecentPayments.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var payment in Model.RecentPayments)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-semibold">@(payment.User?.FullName ?? "Unknown")</span>
+                                        <span class="text-muted mx-1">•</span>
+                                        <span class="text-success">?@payment.Amount</span>
+                                    </div>
+                                    @if (payment.Status == "Completed")
+                                    {
+                                        <span class="badge bg-success">@payment.Status</span>
+                                    }
+                                    else if (payment.Status == "Pending")
+                                    {
+                                        <span class="badge bg-warning text-dark">@payment.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@payment.Status</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">No payments yet.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

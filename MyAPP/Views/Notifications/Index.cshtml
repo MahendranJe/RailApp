@@ -1,0 +1,73 @@
+@model List<MyAPP.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+    var unreadCount = Model.Count(n => !n.IsRead);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2><i class="bi bi-bell me-2"></i>Notifications</h2>
+        <p class="text-muted mb-0">
+            @Model.Count notifications
+            @if (unreadCount > 0)
+            {
+                <span class="badge bg-danger ms-2">@unreadCount unread</span>
+            }
+        </p>
+    </div>
+    @if (unreadCount > 0)
+    {
+        <form asp-action="MarkAllAsRead" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-check-all me-1"></i>Mark All Read
+            </button>
+        </form>
+    }
+</div>
+
+@if (Model.Any())
+{
+    <div class="list-group">
+        @foreach (var notification in Model)
+        {
+            var bgClass = notification.IsRead ? "" : "list-group-item-warning";
+            <div class="list-group-item @bgClass">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            @if (!notification.IsRead)
+                            {
+                                <span class="badge bg-danger me-2">NEW</span>
+                            }
+                            <h6 class="mb-0">@notification.Title</h6>
+                        </div>
+                        <p class="mb-1 text-muted">@notification.Message</p>
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i>@notification.CreatedAt.ToString("dd MMM yyyy, HH:mm")
+                        </small>
+                    </div>
+                    @if (!notification.IsRead)
+                    {
+                        <form asp-action="MarkAsRead" asp-route-id="@notification.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark as read">
+                                <i class="bi bi-check"></i>
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-bell-slash fs-1 text-muted"></i>
+            <p class="text-muted mt-2">No notifications yet</p>
+            <p class="text-muted small">You'll receive notifications when your payments are approved.</p>
+        </div>
+    </div>
+}

@@ -1,0 +1,336 @@
+@model TrainUpdateViewModel
+@{
+    ViewData["Title"] = "Add Train Update";
+    var dayNames = ViewBag.DayNames as List<string> ?? new List<string> { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-plus-lg me-2"></i>Add New Train Update</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateTrainUpdate" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <!-- Basic Info Section -->
+                    <h6 class="text-muted mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="Title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" placeholder="e.g., Rajdhani Express Delayed" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="TrainNumber" class="form-label">Train Number <span class="text-danger">*</span></label>
+                            <input asp-for="TrainNumber" class="form-control" placeholder="e.g., 12301" />
+                            <span asp-validation-for="TrainNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter detailed description about the train update..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FromStation" class="form-label">From Station <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <input asp-for="FromStation" class="form-control" placeholder="e.g., New Delhi" />
+                            </div>
+                            <span asp-validation-for="FromStation" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ToStation" class="form-label">To Station <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+                                <input asp-for="ToStation" class="form-control" placeholder="e.g., Mumbai" />
+                            </div>
+                            <span asp-validation-for="ToStation" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Schedule Section -->
+                    <h6 class="text-muted mb-3"><i class="bi bi-calendar-week me-2"></i>Schedule Settings</h6>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="ScheduleType" class="form-label">Schedule Type <span class="text-danger">*</span></label>
+                            <select asp-for="ScheduleType" class="form-select" id="scheduleType">
+                                <option value="OneTime">One-Time (Single Date)</option>
+                                <option value="Daily">Daily</option>
+                                <option value="Weekly">Weekly (One Day)</option>
+                                <option value="CustomDays">Custom Days</option>
+                                <option value="DateRange">Date Range</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Date Fields -->
+                    <div class="row" id="dateFields">
+                        <div class="col-md-4 mb-3" id="startDateField">
+                            <label asp-for="StartDate" class="form-label">
+                                <span id="startDateLabel">Date</span> <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="StartDate" type="date" class="form-control" />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-3" id="endDateField" style="display:none;">
+                            <label asp-for="EndDate" class="form-label">End Date <span id="endDateRequired" class="text-danger" style="display:none;">*</span></label>
+                            <input asp-for="EndDate" type="date" class="form-control" />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                            <small class="text-muted" id="endDateHint">Leave empty for ongoing schedule</small>
+                        </div>
+                    </div>
+
+                    <!-- Days Selection - Always Visible -->
+                    <div class="mb-3" id="daysSelectionField">
+                        <label class="form-label">
+                            <span id="daysLabel">Operating Days</span> <span class="text-danger">*</span>
+                        </label>
+                        <div class="d-flex flex-wrap gap-2" id="daysContainer">
+                            @foreach (var day in dayNames)
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input day-checkbox" type="checkbox" name="SelectedDays" id="day_@day" value="@day">
+                                    <label class="form-check-label" for="day_@day">@day</label>
+                                </div>
+                            }
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="selectAllDays">Select All</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAllDays">Clear All</button>
+                        </div>
+                        <span asp-validation-for="SelectedDays" class="text-danger small"></span>
+                        <small class="text-muted d-block mt-1" id="daysHint">Select which days the train operates</small>
+                    </div>
+
+                    <!-- Schedule Preview -->
+                    <div class="alert alert-info" id="schedulePreview">
+                        <i class="bi bi-clock me-2"></i>
+                        <span id="schedulePreviewText">Select a schedule type and days to see preview</span>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Additional Options -->
+                    <h6 class="text-muted mb-3"><i class="bi bi-gear me-2"></i>Additional Options</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ImageFile" class="form-label">Timetable Image</label>
+                            <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+                            <small class="text-muted">Upload train timetable or route map image (optional)</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="form-check mt-2">
+                                <input asp-for="IsPremium" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsPremium" class="form-check-label">
+                                    <i class="bi bi-star-fill text-warning me-1"></i>
+                                    Mark as Premium Content
+                                </label>
+                            </div>
+                            <small class="text-muted">Premium content is only visible to subscribed users</small>
+                        </div>
+                    </div>
+
+                    <!-- Hidden field for TravelDate (backward compatibility) -->
+                    <input type="hidden" asp-for="TravelDate" id="hiddenTravelDate" />
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-2"></i>Create Update
+                        </button>
+                        <a asp-action="TrainUpdates" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Set default date
+            var today = new Date().toISOString().split('T')[0];
+            if (!$('#StartDate').val()) {
+                $('#StartDate').val(today);
+            }
+            $('#hiddenTravelDate').val($('#StartDate').val() || today);
+
+            // Handle schedule type change
+            $('#scheduleType').on('change', function() {
+                updateScheduleFields();
+            });
+
+            // Update travel date when start date changes
+            $('#StartDate').on('change', function() {
+                $('#hiddenTravelDate').val($(this).val());
+                updatePreview();
+            });
+
+            $('#EndDate').on('change', function() {
+                updatePreview();
+            });
+
+            // Select/Clear all days
+            $('#selectAllDays').on('click', function() {
+                $('.day-checkbox').prop('checked', true);
+                updatePreview();
+            });
+
+            $('#clearAllDays').on('click', function() {
+                $('.day-checkbox').prop('checked', false);
+                updatePreview();
+            });
+
+            // Update preview when days change
+            $('.day-checkbox').on('change', function() {
+                updatePreview();
+            });
+
+            // Initial setup
+            updateScheduleFields();
+        });
+
+        function updateScheduleFields() {
+            var scheduleType = $('#scheduleType').val();
+            
+            // Show date fields based on type
+            $('#startDateField').show();
+            $('#endDateField').hide();
+            $('#endDateRequired').hide();
+            $('#endDateHint').show();
+
+            switch(scheduleType) {
+                case 'OneTime':
+                    $('#startDateLabel').text('Date');
+                    $('#daysLabel').text('Day of Operation');
+                    $('#daysHint').text('Confirm the day this train runs');
+                    break;
+                case 'Daily':
+                    $('#startDateLabel').text('Start Date');
+                    $('#endDateField').show();
+                    $('#daysLabel').text('Operating Days');
+                    $('#daysHint').text('Select which days the train operates (select all for every day)');
+                    break;
+                case 'Weekly':
+                    $('#startDateLabel').text('Effective From');
+                    $('#endDateField').show();
+                    $('#daysLabel').text('Select Day');
+                    $('#daysHint').text('Select ONE day per week the train operates');
+                    break;
+                case 'CustomDays':
+                    $('#startDateLabel').text('Effective From');
+                    $('#endDateField').show();
+                    $('#daysLabel').text('Operating Days');
+                    $('#daysHint').text('Select which days of the week the train operates');
+                    break;
+                case 'DateRange':
+                    $('#startDateLabel').text('Start Date');
+                    $('#endDateField').show();
+                    $('#endDateRequired').show();
+                    $('#endDateHint').hide();
+                    $('#daysLabel').text('Operating Days in Range');
+                    $('#daysHint').text('Select which days within this date range the train operates');
+                    break;
+            }
+
+            updatePreview();
+        }
+
+        function updatePreview() {
+            var scheduleType = $('#scheduleType').val();
+            var startDate = $('#StartDate').val();
+            var endDate = $('#EndDate').val();
+            var selectedDays = [];
+            
+            $('.day-checkbox:checked').each(function() {
+                selectedDays.push($(this).val());
+            });
+
+            var preview = '';
+
+            if (selectedDays.length === 0) {
+                preview = 'Please select at least one day';
+                $('#schedulePreviewText').text(preview);
+                return;
+            }
+
+            var daysText = selectedDays.length === 7 ? 'All Days' : selectedDays.join(', ');
+
+            switch(scheduleType) {
+                case 'OneTime':
+                    if (startDate) {
+                        var dateObj = new Date(startDate);
+                        preview = 'Runs on ' + formatDate(dateObj) + ' (' + selectedDays[0] + ')';
+                    } else {
+                        preview = 'Select a date';
+                    }
+                    break;
+                case 'Daily':
+                    if (selectedDays.length === 7) {
+                        preview = 'Runs Daily';
+                    } else {
+                        preview = 'Runs on ' + daysText;
+                    }
+                    if (startDate) {
+                        preview += ' (from ' + formatDate(new Date(startDate));
+                        if (endDate) {
+                            preview += ' to ' + formatDate(new Date(endDate));
+                        }
+                        preview += ')';
+                    }
+                    break;
+                case 'Weekly':
+                    preview = 'Runs every ' + getFullDayName(selectedDays[0]);
+                    if (startDate) {
+                        preview += ' (from ' + formatDate(new Date(startDate)) + ')';
+                    }
+                    break;
+                case 'CustomDays':
+                    preview = 'Runs on ' + daysText;
+                    if (startDate) {
+                        preview += ' (from ' + formatDate(new Date(startDate)) + ')';
+                    }
+                    break;
+                case 'DateRange':
+                    if (startDate && endDate) {
+                        preview = 'Runs on ' + daysText + ' from ' + formatDate(new Date(startDate)) + ' to ' + formatDate(new Date(endDate));
+                    } else {
+                        preview = 'Select start and end dates';
+                    }
+                    break;
+            }
+
+            $('#schedulePreviewText').text(preview);
+        }
+
+        function formatDate(date) {
+            var options = { day: '2-digit', month: 'short', year: 'numeric' };
+            return date.toLocaleDateString('en-GB', options);
+        }
+
+        function getFullDayName(short) {
+            var days = {
+                'Sun': 'Sunday', 'Mon': 'Monday', 'Tue': 'Tuesday',
+                'Wed': 'Wednesday', 'Thu': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday'
+            };
+            return days[short] || short;
+        }
+    </script>
+}

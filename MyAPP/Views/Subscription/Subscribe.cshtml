@@ -1,0 +1,210 @@
+@model PaymentViewModel
+@{
+    ViewData["Title"] = "Pay with UPI - " + Model.PlanName;
+    var merchantUpiId = ViewBag.MerchantUpiId as string;
+    var merchantName = ViewBag.MerchantName as string;
+    var upiLink = $"upi://pay?pa={merchantUpiId}&pn={Uri.EscapeDataString(merchantName ?? "Train Updates")}&am={Model.Amount}&cu=INR&tn={Uri.EscapeDataString($"Payment for {Model.PlanName} Plan")}";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="row">
+            <!-- QR Code Section -->
+            <div class="col-md-5 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white text-center">
+                        <h5 class="mb-0"><i class="bi bi-qr-code-scan me-2"></i>Scan & Pay</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="text-muted small mb-3">Scan this QR code with any UPI app</p>
+                        
+                        <!-- QR Code Container -->
+                        <div class="bg-white p-3 d-inline-block rounded border mb-3">
+                            <div id="qrcode" style="width: 200px; height: 200px; margin: 0 auto;"></div>
+                        </div>
+                        
+                        <div class="alert alert-success py-2 mb-3">
+                            <div class="fw-bold fs-4">?@Model.Amount</div>
+                            <small>@Model.PlanName Plan</small>
+                        </div>
+                        
+                        <!-- Pay to Details -->
+                        <div class="bg-light rounded p-3 text-start">
+                            <small class="text-muted">Pay to:</small>
+                            <div class="fw-bold">@merchantName</div>
+                            <div class="text-primary">
+                                <code>@merchantUpiId</code>
+                                <button type="button" class="btn btn-link btn-sm p-0 ms-2" onclick="copyUpiId()">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Supported Apps -->
+                        <div class="mt-3">
+                            <small class="text-muted">Supported Apps:</small>
+                            <div class="d-flex justify-content-center gap-2 mt-2">
+                                <span class="badge bg-light text-dark"><i class="bi bi-google me-1"></i>GPay</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-phone me-1"></i>PhonePe</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-wallet2 me-1"></i>Paytm</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-bank me-1"></i>BHIM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment Form Section -->
+            <div class="col-md-7 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-phone me-2"></i>Confirm Payment</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Plan Summary -->
+                        <div class="bg-light p-3 rounded mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">@Model.PlanName Plan</h5>
+                                    <small class="text-muted">
+                                        @if (Model.DurationMonths == 1)
+                                        {
+                                            <span>1 Month Access</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@Model.DurationMonths Months Access</span>
+                                        }
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <h3 class="mb-0 text-success">?@Model.Amount</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Instructions -->
+                        <div class="card bg-info bg-opacity-10 border-info mb-4">
+                            <div class="card-body py-3">
+                                <h6 class="card-title text-info"><i class="bi bi-info-circle me-2"></i>How to Pay:</h6>
+                                <ol class="small mb-0 ps-3">
+                                    <li>Scan the QR code with GPay/PhonePe/Paytm</li>
+                                    <li>Or send <strong>?@Model.Amount</strong> to <strong>@merchantUpiId</strong></li>
+                                    <li>After payment, enter your UPI ID below</li>
+                                    <li>Click "I Have Paid" to activate subscription</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <form asp-action="ProcessPayment" method="post">
+                            <input type="hidden" asp-for="PlanName" />
+                            <input type="hidden" asp-for="Amount" />
+                            <input type="hidden" asp-for="DurationMonths" />
+                            
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                            <!-- Payment Method Selection -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Payment App Used</label>
+                                <div class="row g-2">
+                                    <div class="col-3">
+                                        <input type="radio" class="btn-check" name="PaymentMethod" id="gpay" value="GPay" checked>
+                                        <label class="btn btn-outline-primary w-100 py-2" for="gpay">
+                                            <i class="bi bi-google d-block"></i>
+                                            <small>GPay</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="radio" class="btn-check" name="PaymentMethod" id="phonepe" value="PhonePe">
+                                        <label class="btn btn-outline-primary w-100 py-2" for="phonepe">
+                                            <i class="bi bi-phone d-block"></i>
+                                            <small>PhonePe</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="radio" class="btn-check" name="PaymentMethod" id="paytm" value="Paytm">
+                                        <label class="btn btn-outline-primary w-100 py-2" for="paytm">
+                                            <i class="bi bi-wallet2 d-block"></i>
+                                            <small>Paytm</small>
+                                        </label>
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="radio" class="btn-check" name="PaymentMethod" id="upi" value="UPI">
+                                        <label class="btn btn-outline-primary w-100 py-2" for="upi">
+                                            <i class="bi bi-bank d-block"></i>
+                                            <small>Other</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- UPI ID Input -->
+                            <div class="mb-4">
+                                <label asp-for="UpiId" class="form-label fw-semibold small">Your UPI ID (used for payment)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-at"></i></span>
+                                    <input asp-for="UpiId" class="form-control" placeholder="yourname@okicici, yourname@ybl, etc." />
+                                </div>
+                                <span asp-validation-for="UpiId" class="text-danger small"></span>
+                                <small class="text-muted">Enter the UPI ID from which you made the payment</small>
+                            </div>
+
+                            <!-- Demo Notice -->
+                            <div class="alert alert-warning small py-2 mb-4">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Demo:</strong> This is simulated. Click "I Have Paid" to activate.
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-check-circle me-2"></i>I Have Paid ?@Model.Amount
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Deep Link Button -->
+        <div class="card bg-gradient text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body text-white py-4">
+                <h5><i class="bi bi-phone me-2"></i>On Mobile?</h5>
+                <p class="mb-3 small">Click below to open your UPI app directly</p>
+                <a href="@upiLink" class="btn btn-light btn-lg">
+                    <i class="bi bi-box-arrow-up-right me-2"></i>Open UPI App & Pay ?@Model.Amount
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        // Generate QR Code
+        document.addEventListener('DOMContentLoaded', function() {
+            var qrcode = new QRCode(document.getElementById("qrcode"), {
+                text: "@Html.Raw(upiLink)",
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+        
+        // Copy UPI ID
+        function copyUpiId() {
+            const upiId = '@merchantUpiId';
+            navigator.clipboard.writeText(upiId).then(() => {
+                alert('UPI ID copied: ' + upiId);
+            });
+        }
+    </script>
+}

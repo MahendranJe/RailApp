@@ -1,0 +1,69 @@
+@model TrainUpdate
+
+@{
+    var cardClass = "train-card";
+    if (Model.Title.ToLower().Contains("delay"))
+    {
+        cardClass += " delayed";
+    }
+    else if (Model.Title.ToLower().Contains("cancel"))
+    {
+        cardClass += " cancelled";
+    }
+}
+
+<div class="card @cardClass mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="badge bg-primary me-2">@Model.TrainNumber</span>
+                @if (Model.Title.ToLower().Contains("delay"))
+                {
+                    <span class="badge bg-warning text-dark">Delayed</span>
+                }
+                else if (Model.Title.ToLower().Contains("cancel"))
+                {
+                    <span class="badge bg-danger">Cancelled</span>
+                }
+                else if (Model.Title.ToLower().Contains("on time"))
+                {
+                    <span class="badge bg-success">On Time</span>
+                }
+                else if (Model.Title.ToLower().Contains("tatkal"))
+                {
+                    <span class="badge bg-info">Tatkal</span>
+                }
+            </div>
+            <small class="text-muted">
+                <i class="bi bi-clock me-1"></i>@Model.CreatedAt.ToString("MMM dd, HH:mm")
+            </small>
+        </div>
+        <h5 class="card-title mb-2">@Model.Title</h5>
+        <p class="card-text text-muted">@Model.Description</p>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="small">
+                <span class="text-primary fw-semibold">
+                    <i class="bi bi-geo-alt me-1"></i>@Model.FromStation
+                </span>
+                <i class="bi bi-arrow-right mx-2"></i>
+                <span class="text-success fw-semibold">
+                    <i class="bi bi-geo-alt-fill me-1"></i>@Model.ToStation
+                </span>
+            </div>
+            <div class="small text-muted">
+                <i class="bi bi-calendar3 me-1"></i>@Model.TravelDate.ToString("dd MMM yyyy")
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .premium-badge {
+        background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>

@@ -1,0 +1,83 @@
+@model AlertViewModel
+@{
+    ViewData["Title"] = "Create Alert";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-bell-fill me-2"></i>Create Availability Alert</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Get notified when tickets become available for your desired train.</p>
+
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="TrainNumber" class="form-label">Train Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-train-front"></i></span>
+                            <input asp-for="TrainNumber" class="form-control" placeholder="e.g., 12301" />
+                        </div>
+                        <span asp-validation-for="TrainNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="TravelDate" class="form-label">Travel Date <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            <input asp-for="TravelDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <span asp-validation-for="TravelDate" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FromStation" class="form-label">From Station</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <input asp-for="FromStation" class="form-control" placeholder="e.g., New Delhi" />
+                            </div>
+                            <span asp-validation-for="FromStation" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ToStation" class="form-label">To Station</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+                                <input asp-for="ToStation" class="form-control" placeholder="e.g., Mumbai" />
+                            </div>
+                            <span asp-validation-for="ToStation" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="bi bi-bell-fill me-2"></i>Create Alert
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="card mt-4 bg-light">
+            <div class="card-body">
+                <h6><i class="bi bi-lightbulb me-2 text-warning"></i>Tips</h6>
+                <ul class="mb-0 small">
+                    <li>Enter the exact train number for accurate tracking</li>
+                    <li>Station names are optional but help filter updates</li>
+                    <li>You'll receive notifications via the app and email</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
