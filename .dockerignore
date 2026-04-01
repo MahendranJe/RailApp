@@ -1,0 +1,69 @@
+# Ignore files and folders that shouldn't be in the Docker image
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# User-specific files
+*.userprefs
+.idea/
+
+# Build artifacts
+*.dll
+*.exe
+*.pdb
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Node modules (if any)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+
+# Render and deployment files
+render.yaml
+.render/
+
+# Local environment files
+*.local
+appsettings.Development.json
+appsettings.Local.json
+
+# Database files
+*.mdf
+*.ldf
+*.db
+*.db-shm
+*.db-wal
+
+# Logs folder
+logs/

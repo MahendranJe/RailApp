@@ -1,0 +1,64 @@
+# Render Blueprint for Southzone Railway Update
+# This file defines the infrastructure for deploying the ASP.NET Core MVC application
+
+services:
+  # Web Service - ASP.NET Core MVC Application
+  - type: web
+    name: southzone-railway-update
+    env: docker
+    region: singapore # Change to your preferred region (oregon, frankfurt, singapore, etc.)
+    plan: starter # free, starter, standard, pro
+    branch: master
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: southzone-railway-db
+          property: connectionString
+      - key: AppSettings__AppName
+        value: Southzone Railway Update
+      - key: AppSettings__WhatsAppChannel
+        value: https://whatsapp.com/channel/0029Va6gl6EFcow4AOH5UC3i
+      - key: AppSettings__InstagramPage
+        value: https://www.instagram.com/southzone_railwayupdate
+      - key: SmtpSettings__FromName
+        value: Southzone Railway Update
+      - key: UpiPayment__MerchantName
+        value: Southzone Railway Update
+      - key: UpiPayment__MerchantCode
+        value: SOUTHZONERAILWAY
+      # Add these as secrets in Render Dashboard (not in this file for security)
+      # - SmtpSettings__Host
+      # - SmtpSettings__Port
+      # - SmtpSettings__Username
+      # - SmtpSettings__Password
+      # - SmtpSettings__FromEmail
+      # - UpiPayment__MerchantUpiId
+    buildCommand: dotnet restore && dotnet publish -c Release -o out
+    startCommand: dotnet out/MyAPP.dll
+    autoDeploy: true
+
+  # SQL Server Database (External - use Render PostgreSQL or external SQL Server)
+  # Note: Render doesn't directly support SQL Server, so you have two options:
+  # Option 1: Use Azure SQL Database (recommended for production)
+  # Option 2: Use Render PostgreSQL and modify your app to support it
+
+databases:
+  # Option: PostgreSQL Database (if you want to migrate from SQL Server)
+  # Uncomment and modify your application to support PostgreSQL
+  # - name: southzone-railway-db
+  #   databaseName: railway_updates_db
+  #   user: railway_user
+  #   plan: starter # free, starter, standard, pro
+  #   region: singapore
+  #   ipAllowList: []
+
+# For SQL Server, add this as an external database connection
+# You'll need to:
+# 1. Create an Azure SQL Database or use another SQL Server provider
+# 2. Add the connection string as an environment variable in Render Dashboard
