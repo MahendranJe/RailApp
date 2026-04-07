@@ -26,7 +26,7 @@ namespace MyAPP.Data
             modelBuilder.Entity<ApplicationUser>(entity =>
             {
                 entity.HasIndex(u => u.Email).IsUnique();
-                entity.HasIndex(u => u.MobileNumber).IsUnique().HasFilter("[MobileNumber] IS NOT NULL");
+                entity.HasIndex(u => u.MobileNumber).IsUnique();
             });
 
             // TrainUpdate configuration

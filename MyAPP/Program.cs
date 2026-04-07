@@ -1,5 +1,12 @@
 using Microsoft.AspNetCore.Identity;
+using System;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MyAPP.Data;
 using MyAPP.Models;
 using MyAPP.Services;
@@ -29,9 +36,12 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Add DbContext
+// Add DbContext - Using MySQL (Aiven)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(
+    builder.Configuration.GetConnectionString("DefaultConnection"),
+    ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
+));
 
 // Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -75,23 +85,63 @@ builder.Services.AddHostedService<AlertBackgroundService>();
 
 var app = builder.Build();
 
+
+
+
 // Seed Database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
+        logger.LogWarning("========== DATABASE MIGRATION STARTED ==========");
         var context = services.GetRequiredService<ApplicationDbContext>();
+        
+        logger.LogWarning("Ensuring database exists...");
+        await context.Database.EnsureCreatedAsync();
+        logger.LogWarning("? Database ensured");
+        
+        logger.LogWarning("Checking pending migrations...");
+        var pendingMigrations = (await context.Database.GetPendingMigrationsAsync()).ToList();
+        if (pendingMigrations.Count > 0)
+        {
+            logger.LogWarning($"Found {pendingMigrations.Count} pending migrations:");
+            foreach (var migration in pendingMigrations)
+            {
+                logger.LogWarning($"  - {migration}");
+            }
+            
+            logger.LogWarning("Applying migrations...");
+            await context.Database.MigrateAsync();
+            logger.LogWarning("? Migrations completed successfully");
+        }
+        else
+        {
+            logger.LogWarning("? No pending migrations");
+        }
+        
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         
-        await context.Database.MigrateAsync();
+        logger.LogWarning("Seeding data...");
         await DbSeeder.SeedDataAsync(context, userManager, roleManager);
+        logger.LogWarning("? Database seeding completed successfully");
+        logger.LogWarning("========== DATABASE MIGRATION COMPLETED ==========");
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "? An error occurred while seeding the database.");
+        logger.LogError($"Exception Type: {ex.GetType().Name}");
+        logger.LogError($"Message: {ex.Message}");
+        logger.LogError($"StackTrace: {ex.StackTrace}");
+        if (ex.InnerException != null)
+        {
+            logger.LogError($"Inner Exception Type: {ex.InnerException.GetType().Name}");
+            logger.LogError($"Inner Exception Message: {ex.InnerException.Message}");
+            logger.LogError($"Inner Exception StackTrace: {ex.InnerException.StackTrace}");
+        }
+        // Don't re-throw - log and continue so we can see other errors
     }
 }
 
