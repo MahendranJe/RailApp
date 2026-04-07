@@ -37,9 +37,13 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 builder.Services.AddControllersWithViews();
 
 // Add DbContext - Using MySQL (Aiven)
+// Connection string priority: Environment variable > appsettings.json
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
-    builder.Configuration.GetConnectionString("DefaultConnection"),
+    connectionString,
     new MySqlServerVersion(new Version(8, 0, 0))
 ));
 
